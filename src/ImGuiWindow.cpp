@@ -25,7 +25,7 @@ ImGuiWindow::ImGuiWindow()
     window_data_ = {};
     window_shown_ = false;
     window_minimized_ = false;
-    keyboard_unfocus_requested_ = false;
+    keyboard_active_ = false;
 }
 
 auto ImGuiWindow::Initialize(VulkanRenderer*& renderer, const char* name, int width, int height, float dpiScale, bool show) -> void
@@ -140,17 +140,17 @@ auto ImGuiWindow::SetMinimizedFromEvent(bool state) -> void
     window_minimized_ = state;
 }
 
+auto ImGuiWindow::SetKeyboardActiveState(bool state) -> void
+{
+    keyboard_active_ = state;
+}
+
 auto ImGuiWindow::Hide() -> void
 {
     SDL_RestoreWindow(window_);
     SDL_HideWindow(window_);
 
     window_shown_ = false;
-}
-
-auto ImGuiWindow::RequestKeyboardUnfocus() -> void
-{
-    keyboard_unfocus_requested_ = true;
 }
 
 auto ImGuiWindow::Draw() -> void
@@ -160,14 +160,6 @@ auto ImGuiWindow::Draw() -> void
     ImGui::NewFrame();
 
     ImGuiIO& io = ImGui::GetIO();
-
-    if (keyboard_unfocus_requested_) {
-        ImGui::SetItemDefaultFocus();
-        ImGui::SetKeyboardFocusHere(-1);
-        if (!io.WantTextInput) {
-            keyboard_unfocus_requested_ = false;
-        }
-    }
 
     // == Menu Render Begin
 

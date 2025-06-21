@@ -137,6 +137,7 @@ int main(
         rotation = glm::normalize(rotation);
 
         g_overlay->SetTransformDeviceRelative(vr::TrackedControllerRole_LeftHand, position, rotation);
+        g_overlay->Show();
 #endif
 
 #ifdef EXAMPLE_OVERLAY_ORIGIN_RELATIVE
@@ -150,9 +151,11 @@ int main(
         g_overlay->EnableFlag(vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible);
 
         // Origin relative offset
-        glm::vec3 position = { 0, 1.0, -1.5 };
-        glm::quat rotation = { 0, 0, 0, 0 };
+        glm::vec3 position = { 0.0f, 1.5f, -1.0f };
+        glm::quat rotation = glm::quat_identity<float, glm::defaultp>();
+
         g_overlay->SetTransformWorldRelative(vr::TrackingUniverseStanding, position, rotation);
+        g_overlay->Show();
 #endif
     }
     catch (std::exception& ex) {
@@ -212,78 +215,6 @@ int main(
                     break;
                 }
 #ifdef IMGUI_SDL_PLATFORM_BACKEND
-                case vr::VREvent_MouseMove:
-                {
-                    auto& io = ImGui::GetIO();
-                    // OpenGL uses coordinate space Bottom Left == 0,0 where as Vulkan is Top Left == 0,0
-                    // So we need to flip the y-axis to get the correct mouse position data
-                    io.AddMousePosEvent(vr_event.data.mouse.x, io.DisplaySize.y - vr_event.data.mouse.y);
-                    break;
-                }
-                case vr::VREvent_MouseButtonDown:
-                {
-                    auto& io = ImGui::GetIO();
-
-                    uint64_t mask = vr_event.data.mouse.button;
-                    mask &= vr::VRMouseButton_Left | vr::VRMouseButton_Right | vr::VRMouseButton_Middle;
-                    // Ensure that the event sends a bitmask with only a single flag
-                    // this may be redundant but is here in case driver sends bad data
-                    if (mask && (mask & (mask - 1))) {
-                        break;
-                    }
-
-                    int mouse_button = ImGuiMouseButton_COUNT;
-
-                    // Most drivers only send VRMouseButton_Left but there are some drivers
-                    // which also send VRMouseButton_Right and VRMouseButton_Middle
-                    // right click is often mapped to A, X or B
-                    // middle click is often mapped to trackpad click
-                    if (vr_event.data.mouse.button & vr::VRMouseButton_Left)
-                        mouse_button = ImGuiMouseButton_Left;
-                    else if (vr_event.data.mouse.button & vr::VRMouseButton_Right)
-                        mouse_button = ImGuiMouseButton_Right;
-                    else if (vr_event.data.mouse.button & vr::VRMouseButton_Middle)
-                        mouse_button = ImGuiMouseButton_Middle;
-
-                    if (mouse_button < ImGuiMouseButton_COUNT)
-                        io.AddMouseButtonEvent(mouse_button, true);
-                    break;
-                }
-                case vr::VREvent_MouseButtonUp:
-                {
-                    auto& io = ImGui::GetIO();
-
-                    uint64_t mask = vr_event.data.mouse.button;
-                    mask &= vr::VRMouseButton_Left | vr::VRMouseButton_Right | vr::VRMouseButton_Middle;
-                    if (mask && (mask & (mask - 1))) {
-                        break;
-                    }
-
-                    int mouse_button = ImGuiMouseButton_COUNT;
-
-                    if (vr_event.data.mouse.button & vr::VRMouseButton_Left)
-                        mouse_button = ImGuiMouseButton_Left;
-                    else if (vr_event.data.mouse.button & vr::VRMouseButton_Right)
-                        mouse_button = ImGuiMouseButton_Right;
-                    else if (vr_event.data.mouse.button & vr::VRMouseButton_Middle)
-                        mouse_button = ImGuiMouseButton_Middle;
-
-                    if (mouse_button < ImGuiMouseButton_COUNT)
-                        io.AddMouseButtonEvent(mouse_button, false);
-                    break;
-                }
-                case vr::VREvent_ScrollDiscrete:
-                case vr::VREvent_ScrollSmooth:
-                {
-                    auto& io = ImGui::GetIO();
-                    // Emulate physical mouse behaviour by only sending y-axis
-                    // VREvent_ScrollDiscrete sends discrete values [-1.0, 1.0]
-                    // VREvent_ScrollSmooth sends continuous values [-1.0, 1.0]
-                    const float y = vr_event.data.scroll.ydelta;
-                    if (y != 0.0f)
-                        io.AddMouseWheelEvent(0.0f, y);
-                    break;
-                }
                 case vr::VREvent_OverlayShown:
                 {
                     if (g_overlay->IsVisible() && g_imGuiWindow->Shown()) {
@@ -295,46 +226,6 @@ int main(
                 {
                     if (!g_overlay->IsVisible() && g_imGuiWindow->Shown()) {
                         g_imGuiWindow->Show();
-                    }
-                    break;
-                }
-                case vr::VREvent_KeyboardDone:
-                {
-                    g_imGuiWindow->RequestKeyboardUnfocus();
-                    g_overlay->HideKeyboard();
-                    break;
-                }
-                case vr::VREvent_KeyboardCharInput:
-                {
-                    ImGuiIO& io = ImGui::GetIO();
-
-                    switch (vr_event.data.keyboard.cNewInput[0])
-                    {
-                    case 8: // Backspace
-                    {
-                        io.AddKeyEvent(ImGuiKey_Backspace, true);
-                        io.AddKeyEvent(ImGuiKey_Backspace, false);
-                        break;
-                    }
-                    case 10: // Enter
-                    {
-                        io.AddKeyEvent(ImGuiKey_Enter, true);
-                        io.AddKeyEvent(ImGuiKey_Enter, false);
-                        break;
-                    }
-                    default:
-                    {
-                        io.AddInputCharactersUTF8(vr_event.data.keyboard.cNewInput);
-                        break;
-                    }
-                    }
-                    break;
-                }
-                case vr::VREvent_KeyboardClosed_Global:
-                {
-                    if (vr_event.data.keyboard.overlayHandle == g_overlay->Handle()) {
-                        g_imGuiWindow->RequestKeyboardUnfocus();
-                        g_overlay->HideKeyboard();
                     }
                     break;
                 }
@@ -354,8 +245,14 @@ int main(
 #ifdef IMGUI_SDL_PLATFORM_BACKEND
         {
             ImGuiIO& io = ImGui::GetIO();
-            if (g_overlay->IsVisible() && !g_imGuiWindow->KeyboardUnfocusPending() && io.WantTextInput) {
+
+            if (!io.WantTextInput) {
+                g_imGuiWindow->SetKeyboardActiveState(false);
+            }
+
+            if (g_overlay->IsVisible() && !g_imGuiWindow->KeyboardActive() && io.WantTextInput) {
                 g_overlay->ShowKeyboard(vr::k_EGamepadTextInputModeNormal);
+                g_imGuiWindow->SetKeyboardActiveState(true);
             }
         }
 
@@ -385,7 +282,6 @@ int main(
 
 #ifdef IMGUI_OPENVR_PLATFORM_BACKEND
         g_vulkanRenderer->RenderOverlay(draw_data, g_overlay);
-        vr::VROverlay()->ShowOverlay(g_overlay->Handle());
 #endif
 
 #ifdef IMGUI_SDL_PLATFORM_BACKEND

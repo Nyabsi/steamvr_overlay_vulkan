@@ -155,16 +155,6 @@ bool ImGui_ImplOpenVR_ProcessOverlayEvent(const vr::VREvent_t& event)
                 io.AddMouseWheelEvent(0.0f, y);
             break;
         }
-        case vr::VREvent_KeyboardDone:
-        {
-            if (!vr::VROverlay())
-                return false;
-
-            // io.AddKeyEvent(ImGuiKey_Enter, true);
-            // io.AddKeyEvent(ImGuiKey_Enter, false);
-            vr::VROverlay()->HideKeyboard();
-            break;
-        }
         case vr::VREvent_KeyboardCharInput:
         {
             // Some special inputs ie. Backspace, Enter, etc...
@@ -182,6 +172,7 @@ bool ImGui_ImplOpenVR_ProcessOverlayEvent(const vr::VREvent_t& event)
                 {
                     io.AddKeyEvent(ImGuiKey_Enter, true);
                     io.AddKeyEvent(ImGuiKey_Enter, false);
+                    vr::VROverlay()->HideKeyboard();
                     break;
                 }
                 default:
@@ -196,6 +187,7 @@ bool ImGui_ImplOpenVR_ProcessOverlayEvent(const vr::VREvent_t& event)
         {
             if (!vr::VROverlay())
                 return false;
+
             // let's check when VREvent_KeyboardClosed_Global is sent is our keyboard is still shown
             // this may happen because the dashboard or overlay was closed when the keyboard was open
             if (event.data.keyboard.overlayHandle == bd->handle && bd->keyboard_active) {

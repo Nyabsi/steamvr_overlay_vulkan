@@ -29,7 +29,7 @@ This project is intended for developers, not users. If your goal is not to creat
     - Overlays
 		- Dashboard
 		- World
-			- You can create overlays relative to Origin (World Space) or Tracked Devices (ie. Head, Controllers, etc)
+			- You can create overlays relative to Origin (World Space) or Tracked Devices (ie. Head, etc...)
     - Useful high-level OpenVR API wrappers
 - Written cross-platform in mind
 	- Supports both Linux and Windows

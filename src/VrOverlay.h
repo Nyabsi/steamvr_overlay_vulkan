@@ -114,7 +114,7 @@ public:
     }
 
     [[maybe_unused]] auto ShowKeyboard(vr::EGamepadTextInputMode mode, bool multi_line = false) -> void {
-        vr::EVROverlayError result = vr::VROverlay()->ShowKeyboardForOverlay(handle, mode, multi_line ? vr::k_EGamepadTextInputLineModeMultipleLines : vr::k_EGamepadTextInputLineModeSingleLine, vr::KeyboardFlag_Minimal, "OpenVR Overlay Provided Virtual Keyboard", 1, "", NULL);
+        vr::EVROverlayError result = vr::VROverlay()->ShowKeyboardForOverlay(handle, mode, multi_line ? vr::k_EGamepadTextInputLineModeMultipleLines : vr::k_EGamepadTextInputLineModeSingleLine, vr::KeyboardFlag_Minimal | vr::KeyboardFlag_HideDoneKey, "OpenVR Overlay Provided Virtual Keyboard", 1, "", NULL);
         if (result > vr::VROverlayError_None)
             throw std::runtime_error(std::format("Failed to show keyboard {}", static_cast<int>(result)));
     }
@@ -123,9 +123,12 @@ public:
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) * glm::toMat4(rotation);
         
         vr::HmdMatrix34_t m = {};
-        for (int row = 0; row < 3; ++row)
-            for (int col = 0; col < 4; ++col)
-                m.m[row][col] = transform[row][col];
+        for (int row = 0; row < 3; ++row) {
+            for (int col = 0; col < 3; ++col) {
+                m.m[row][col] = transform[col][row];
+            }
+            m.m[row][3] = transform[3][row];
+        }
 
         vr::VROverlay()->SetOverlayTransformAbsolute(handle, origin, &m);
     }
@@ -152,6 +155,14 @@ public:
 
     [[maybe_unused]] auto IsVisible() const -> bool {
         return vr::VROverlay()->IsOverlayVisible(handle);
+    }
+
+    [[maybe_unused]] auto Show() const -> void {
+        vr::VROverlay()->ShowOverlay(handle);
+    }
+
+    [[maybe_unused]] auto Hide() const -> void {
+        vr::VROverlay()->HideOverlay(handle);
     }
 
     [[maybe_unused]] auto Destroy() const -> void {

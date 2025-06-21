@@ -25,12 +25,12 @@ public:
     [[nodiscard]] auto WindowData() -> Vulkan_Window* { return reinterpret_cast<Vulkan_Window*>(&window_data_); };
     [[nodiscard]] auto Shown() const -> bool { return window_shown_; };
     [[nodiscard]] auto Minimized() const -> bool { return window_minimized_; };
-    [[nodiscard]] auto KeyboardUnfocusPending() const -> bool { return keyboard_unfocus_requested_; };
+    [[nodiscard]] auto KeyboardActive() const -> bool { return keyboard_active_; };
 
     auto Hide() -> void;
     auto Show() -> void;
     auto SetMinimizedFromEvent(bool state) -> void;
-    auto RequestKeyboardUnfocus() -> void;
+    auto SetKeyboardActiveState(bool state) -> void;
     auto Draw() -> void;
 
     auto Destroy(VulkanRenderer*& renderer) -> void;
@@ -41,5 +41,5 @@ private:
     Vulkan_Window window_data_;
     bool window_shown_;
     bool window_minimized_;
-    bool keyboard_unfocus_requested_;
+    bool keyboard_active_;
 };
