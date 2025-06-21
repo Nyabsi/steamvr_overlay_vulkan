@@ -1,0 +1,18 @@
+{
+    "source": "builtin",
+    "applications": [
+        {
+            "app_key": "github.VulkanOverlayExample",
+            "launch_type": "binary",
+            "binary_path_windows": "steamvr_overlay_vulkan.exe",
+            "is_dashboard_overlay": true,
+
+            "strings": {
+                "en_us": {
+                    "name": "Vulkan Overlay Example",
+                    "description": "Example project to create SteamVR overlays"
+                }
+            }
+        }
+    ]
+}
