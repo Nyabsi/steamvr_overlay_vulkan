@@ -59,8 +59,21 @@ class VrTrackedDeviceProperties {
             throw std::runtime_error("The device must be connected to use VrTrackedDeviceProperties!");
     }
 
-    // TODO: implement
-    // [[maybe_unused]] auto GetString(const vr::ETrackedDeviceProperty property) const -> void { }
+    [[maybe_unused]] auto GetString(const vr::ETrackedDeviceProperty property) const -> std::string { 
+        vr::ETrackedPropertyError result = {};
+        std::vector<char> buffer(vr::k_unMaxPropertyStringSize);
+        auto buffer_len = vr::VRSystem()->GetStringTrackedDeviceProperty(handle, property, buffer.data(), vr::k_unMaxPropertyStringSize, &result);
+        if (result != vr::TrackedProp_Success || buffer_len == 0) {
+            throw std::runtime_error(std::format(
+                "Failed to get string prop \"{}\" for {} (err={})",
+                static_cast<int>(property),
+                static_cast<int>(handle),
+                static_cast<int>(result)
+            ));
+        }
+
+        return buffer.data();
+    }
 
     [[maybe_unused]] auto GetBool(const vr::ETrackedDeviceProperty property) -> bool {
         vr::ETrackedPropertyError result = {};

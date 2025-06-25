@@ -849,7 +849,7 @@ auto VulkanRenderer::RenderOverlay(ImDrawData* draw_data, VrOverlay*& overlay) -
     VkResult vk_result = {};
 
     const ImVec4 background_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+    /// NOTE: suboptimal
     vulkan_overlay_->clear_value.color.float32[0] = background_color.x * background_color.w;
     vulkan_overlay_->clear_value.color.float32[1] = background_color.y * background_color.w;
     vulkan_overlay_->clear_value.color.float32[2] = background_color.z * background_color.w;
@@ -1054,8 +1054,6 @@ auto VulkanRenderer::DestroyWindow(Vulkan_Window* window) const -> void
     vk_result = vkQueueWaitIdle(vulkan_queue_);
     VK_VALIDATE_RESULT(vk_result);
 
-    ImGui_ImplVulkan_Shutdown();
-
     this->DestroyFrames(window);
 
     vkDestroyPipeline(vulkan_device_, window->pipeline, vulkan_allocator_);
@@ -1063,14 +1061,6 @@ auto VulkanRenderer::DestroyWindow(Vulkan_Window* window) const -> void
     vkDestroySwapchainKHR(vulkan_device_, window->swapchain, vulkan_allocator_);
     vkDestroySurfaceKHR(vulkan_instance_, window->surface, vulkan_allocator_);
     vkDestroyDescriptorPool(vulkan_device_, vulkan_descriptor_pool_, vulkan_allocator_);
-
-#ifdef ENABLE_VULKAN_VALIDATION
-    auto f_vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(vulkan_instance_, "vkDestroyDebugReportCallbackEXT");
-    f_vkDestroyDebugReportCallbackEXT(vulkan_instance_, nullptr, vulkan_allocator_);
-#endif
-
-    vkDestroyDevice(vulkan_device_, vulkan_allocator_);
-    vkDestroyInstance(vulkan_instance_, vulkan_allocator_);
 }
 
 auto VulkanRenderer::DestroyFrames(Vulkan_Window* window) const -> void
@@ -1127,4 +1117,20 @@ auto VulkanRenderer::DestroyOverlay(Vulkan_Overlay* vulkan_overlay) const -> voi
     vulkan_overlay->texture = VK_NULL_HANDLE;
     vulkan_overlay->texture_memory = VK_NULL_HANDLE;
     vulkan_overlay->texture_view = VK_NULL_HANDLE;
+}
+
+auto VulkanRenderer::Destroy() -> void
+{
+    VkResult vk_result = {};
+
+    vk_result = vkQueueWaitIdle(vulkan_queue_);
+    VK_VALIDATE_RESULT(vk_result);
+
+#ifdef ENABLE_VULKAN_VALIDATION
+    auto f_vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(vulkan_instance_, "vkDestroyDebugReportCallbackEXT");
+    f_vkDestroyDebugReportCallbackEXT(vulkan_instance_, nullptr, vulkan_allocator_);
+#endif
+
+    vkDestroyDevice(vulkan_device_, vulkan_allocator_);
+    vkDestroyInstance(vulkan_instance_, vulkan_allocator_);
 }

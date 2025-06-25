@@ -175,6 +175,38 @@ bool ImGui_ImplOpenVR_ProcessOverlayEvent(const vr::VREvent_t& event)
                     vr::VROverlay()->HideKeyboard();
                     break;
                 }
+                case 27: // arrow keys
+                {
+                    uint8_t direction = event.data.keyboard.cNewInput[2];
+                    switch (direction)
+                    {
+                    case 68:
+                    {
+                        io.AddKeyEvent(ImGuiKey_LeftArrow, true);
+                        io.AddKeyEvent(ImGuiKey_LeftArrow, false);
+                        break;
+                    }
+                    case 67:
+                    {
+                        io.AddKeyEvent(ImGuiKey_RightArrow, true);
+                        io.AddKeyEvent(ImGuiKey_RightArrow, false);
+                        break;
+                    }
+                    case 65:
+                    {
+                        io.AddKeyEvent(ImGuiKey_UpArrow, true);
+                        io.AddKeyEvent(ImGuiKey_UpArrow, false);
+                        break;
+                    }
+                    case 66:
+                    {
+                        io.AddKeyEvent(ImGuiKey_DownArrow, true);
+                        io.AddKeyEvent(ImGuiKey_DownArrow, false);
+                        break;
+                    }
+                    }
+                    break;
+                }
                 default:
                 {
                     io.AddInputCharactersUTF8(event.data.keyboard.cNewInput);
@@ -247,9 +279,7 @@ void ImGui_ImplOpenVR_NewFrame()
     }
 
     if (vr::VROverlay()->IsOverlayVisible(bd->handle) && !bd->keyboard_active && io.WantTextInput) {
-        vr::EVROverlayError result = vr::VROverlay()->ShowKeyboardForOverlay(bd->handle, vr::k_EGamepadTextInputModeNormal, vr::k_EGamepadTextInputLineModeSingleLine, vr::KeyboardFlag_Minimal | vr::KeyboardFlag_HideDoneKey, "ImGui OpenVR Virtual Keyboard", 1, "", NULL);
-        IM_ASSERT(result == vr::VROverlayError_None && "ShowKeyboardForOverlay returned something else than VROverlayError_None");
-        bd->keyboard_active = true;
+        vr::VROverlay()->ShowKeyboardForOverlay(bd->handle, vr::k_EGamepadTextInputModeNormal, vr::k_EGamepadTextInputLineModeSingleLine, vr::KeyboardFlag_Minimal | vr::KeyboardFlag_HideDoneKey | vr::KeyboardFlag_ShowArrowKeys, "ImGui OpenVR Virtual Keyboard", 1, "", NULL);
     }
 
     io.DisplaySize = ImVec2(static_cast<float>(bd->width), static_cast<float>(bd->height));

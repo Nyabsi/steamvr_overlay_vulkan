@@ -115,6 +115,7 @@ public:
 
     auto DestroyWindow(Vulkan_Window* window) const -> void;
     auto DestroyOverlay(Vulkan_Overlay* vulkan_overlay) const -> void;
+    auto Destroy() -> void;
 private:
     
     auto DestroyFrames(Vulkan_Window* window) const -> void;

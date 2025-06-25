@@ -78,6 +78,16 @@ public:
             );
     }
 
+    [[maybe_unused]] auto FlagEnabled(vr::VROverlayFlags flag) const -> bool {
+        bool enabled = {};
+        vr::EVROverlayError result = vr::VROverlay()->GetOverlayFlag(handle, flag, &enabled);
+        if (result > vr::VROverlayError_None)
+            throw std::runtime_error(
+                std::format("Failed to check if overlay flag is enabled \"{}\": {}", static_cast<int>(flag), static_cast<int>(result))
+            );
+        return enabled;
+    }
+
     [[maybe_unused]] auto EnableFlag(vr::VROverlayFlags flag) const -> void {
         vr::EVROverlayError result = vr::VROverlay()->SetOverlayFlag(handle, flag, true);
         if (result > vr::VROverlayError_None)
@@ -148,6 +158,12 @@ public:
     }
 
     // TODO: SetOverlayTransformTrackedDeviceComponent if needed
+
+    [[maybe_unused]] auto TriggerLaserMouseHapticVibration(float duration, float frequency, float amplitude) const -> void {
+        vr::EVROverlayError result = vr::VROverlay()->TriggerLaserMouseHapticVibration(handle, duration, frequency, amplitude);
+        if (result > vr::VROverlayError_None)
+            throw std::runtime_error(std::format("Failed to show keyboard {}", static_cast<int>(result)));
+    }
 
     [[maybe_unused]] auto HideKeyboard() -> void {
         vr::VROverlay()->HideKeyboard();

@@ -136,5 +136,4 @@ auto ImGuiOverlayWindow::Draw() -> void
 auto ImGuiOverlayWindow::Destroy() -> void
 {
     ImGui_ImplOpenVR_Shutdown();
-    ImGui::DestroyContext();
 }

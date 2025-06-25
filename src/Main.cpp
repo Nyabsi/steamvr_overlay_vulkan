@@ -315,8 +315,12 @@ int main(
     VkResult vk_result = vkDeviceWaitIdle(g_vulkanRenderer->Device());
     VK_VALIDATE_RESULT(vk_result);
 
+    g_ImGuiOverlayWindow->Destroy();
     g_vulkanRenderer->DestroyWindow(g_imGuiWindow->WindowData());
     g_imGuiWindow->Destroy(g_vulkanRenderer);
+    g_vulkanRenderer->Destroy();
+
+    ImGui::DestroyContext();
 
     SDL_Quit();
 
