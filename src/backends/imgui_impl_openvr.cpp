@@ -280,9 +280,10 @@ void ImGui_ImplOpenVR_NewFrame()
 
     if (vr::VROverlay()->IsOverlayVisible(bd->handle) && !bd->keyboard_active && io.WantTextInput) {
         vr::VROverlay()->ShowKeyboardForOverlay(bd->handle, vr::k_EGamepadTextInputModeNormal, vr::k_EGamepadTextInputLineModeSingleLine, vr::KeyboardFlag_Minimal | vr::KeyboardFlag_HideDoneKey | vr::KeyboardFlag_ShowArrowKeys, "ImGui OpenVR Virtual Keyboard", 1, "", NULL);
+        bd->keyboard_active = true;
     }
 
-    io.DisplaySize = ImVec2(static_cast<float>(bd->width), static_cast<float>(bd->height));
+    io.DisplaySize = ImVec2(bd->width, bd->height);
     if (bd->width > 0 && bd->height > 0) {
         io.DisplayFramebufferScale = ImVec2(1, 1);
         bd->mouse_scale = { io.DisplaySize.x, io.DisplaySize.y };
