@@ -301,8 +301,6 @@ auto VulkanRenderer::SetupWindow(Vulkan_Window* window, VkSurfaceKHR surface, ui
                 return "VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR";
             case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
                 return "VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR";
-            case VK_PRESENT_MODE_FIFO_LATEST_READY_EXT:
-                return "VK_PRESENT_MODE_FIFO_LATEST_READY_EXT";
             default:
                 return "N/A";
         }
@@ -1049,11 +1047,6 @@ auto VulkanRenderer::Present(Vulkan_Window* window)  -> void
 
 auto VulkanRenderer::DestroyWindow(Vulkan_Window* window) const -> void
 {
-    VkResult vk_result = {};
-
-    vk_result = vkQueueWaitIdle(vulkan_queue_);
-    VK_VALIDATE_RESULT(vk_result);
-
     this->DestroyFrames(window);
 
     vkDestroyPipeline(vulkan_device_, window->pipeline, vulkan_allocator_);

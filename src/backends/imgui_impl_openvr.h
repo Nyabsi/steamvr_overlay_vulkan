@@ -17,6 +17,7 @@
 
 #pragma once
 #include <imgui.h>      // IMGUI_IMPL_API
+#include <cstdint>
 #ifndef IMGUI_DISABLE
 
 namespace vr {
