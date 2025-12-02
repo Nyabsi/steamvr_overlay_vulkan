@@ -34,3 +34,6 @@ cmake-build-*
 # IDE-specific stuff:
 .idea/
 .vs/
+
+# Build Artifacts
+build
