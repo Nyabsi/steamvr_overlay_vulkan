@@ -523,9 +523,7 @@ auto VulkanRenderer::SetupSwapchain(Vulkan_Window* window, uint32_t width, uint3
     vk_result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkan_physical_device_, window->surface, &surface_capabilities);
     VK_VALIDATE_RESULT(vk_result);
 
-    // currentExtent will be (0,0) if the surface is minimized,
-    // cause error: vkCreateSwapchainKHR(): pCreateInfo->imageExtent (width = 0,
-    // height = 0) is invalid.
+    // (0, 0) is not a legal size for a image extent in Vulkan specification
     if (surface_capabilities.currentExtent.width == 0 ||
         surface_capabilities.currentExtent.height == 0) {
       if (old_swapchain) {
@@ -863,8 +861,6 @@ auto VulkanRenderer::RenderWindow(ImDrawData* draw_data, Vulkan_Window* window) 
     vk_result = vkBeginCommandBuffer(fd->command_buffer, &buffer_begin_info);
     VK_VALIDATE_RESULT(vk_result);
 
-    // before calling vkCmdBeginRendering, add a barrier to
-    // translate the image layout from PRESENT_SRC_KHR to COLOR_ATTACHMENT_OPTIMAL
     vkCmdPipelineBarrier(fd->command_buffer,
                          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0,
@@ -874,7 +870,6 @@ auto VulkanRenderer::RenderWindow(ImDrawData* draw_data, Vulkan_Window* window) 
     ImGui_ImplVulkan_RenderDrawData(draw_data, fd->command_buffer);
     f_vkCmdEndRenderingKHR(fd->command_buffer);
 
-    // after rendering complete, translate image layout back
     vkCmdPipelineBarrier(fd->command_buffer,
                          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                          VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0,
