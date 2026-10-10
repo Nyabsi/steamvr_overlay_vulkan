@@ -523,6 +523,16 @@ auto VulkanRenderer::SetupSwapchain(Vulkan_Window* window, uint32_t width, uint3
     vk_result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkan_physical_device_, window->surface, &surface_capabilities);
     VK_VALIDATE_RESULT(vk_result);
 
+    // (0, 0) is not a legal size for a image extent in Vulkan specification
+    if (surface_capabilities.currentExtent.width == 0 ||
+        surface_capabilities.currentExtent.height == 0) {
+      if (old_swapchain) {
+        vkDestroySwapchainKHR(vulkan_device_, old_swapchain, vulkan_allocator_);
+      }
+      should_rebuild_swapchain_ = true;
+      return;
+    }
+
     auto set_minimum_concurrent_image_count = [](VkPresentModeKHR mode) {
         switch (mode) {
         case VK_PRESENT_MODE_MAILBOX_KHR:
@@ -803,6 +813,42 @@ auto VulkanRenderer::RenderWindow(ImDrawData* draw_data, Vulkan_Window* window) 
         .pStencilAttachment = nullptr,
     };
 
+    const VkImageMemoryBarrier render_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .srcAccessMask = 0,
+        .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        .oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image = fd->backbuffer,
+        .subresourceRange = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+
+    const VkImageMemoryBarrier present_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        .dstAccessMask = 0,
+        .oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image = fd->backbuffer,
+        .subresourceRange = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+
     vk_result = vkWaitForFences(vulkan_device_, 1, &fd->fence, VK_TRUE, UINT64_MAX);
     VK_VALIDATE_RESULT(vk_result);
 
@@ -815,9 +861,19 @@ auto VulkanRenderer::RenderWindow(ImDrawData* draw_data, Vulkan_Window* window) 
     vk_result = vkBeginCommandBuffer(fd->command_buffer, &buffer_begin_info);
     VK_VALIDATE_RESULT(vk_result);
 
+    vkCmdPipelineBarrier(fd->command_buffer,
+                         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0,
+                         nullptr, 0, nullptr, 1, &render_barrier);
+
     f_vkCmdBeginRenderingKHR(fd->command_buffer, &rendering_info);
     ImGui_ImplVulkan_RenderDrawData(draw_data, fd->command_buffer);
     f_vkCmdEndRenderingKHR(fd->command_buffer);
+
+    vkCmdPipelineBarrier(fd->command_buffer,
+                         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                         VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0,
+                         nullptr, 1, &present_barrier);
 
     vk_result = vkEndCommandBuffer(fd->command_buffer);
     VK_VALIDATE_RESULT(vk_result);

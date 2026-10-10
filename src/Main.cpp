@@ -268,7 +268,7 @@ int main(
             ImGui_ImplVulkan_SetMinImageCount(g_vulkanRenderer->MinimumConcurrentImageCount());
 
             g_imGuiWindow->WindowData()->width = fb_width;
-            g_imGuiWindow->WindowData()->width = fb_height;
+            g_imGuiWindow->WindowData()->height = fb_height;
 
             g_vulkanRenderer->SetupSwapchain(g_imGuiWindow->WindowData(), fb_width, fb_height);
             g_imGuiWindow->WindowData()->frame_index = 0;
